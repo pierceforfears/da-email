@@ -1,0 +1,1408 @@
+%%=contentareabyname("Shared Items\Shared Contents\EmailChecks")=%%
+%%[/*AMPSCRIPT*/<div style="display:none;">]%%
+    %%[
+    /*Set @TriBrand to "Y" or "y" to display Tribrand footer. Set to anything else to hide it*/
+    Set @TriBrand = "Y"
+
+    Set @V1 = "<strong>FREE SHIPPING</strong> on $50+"
+    Set @V2 = "<strong>FREE SHIPPING</strong> on All Orders"
+    Set @V3 = "<strong>FREE SHIPPING</strong> to any Carter's or Oshkosh Store"
+
+    /*Set @V4 to a Custom offer or blank*/
+    Set @V4 = ""
+
+    /*Set @TribrandOffer to the offer you want*/
+    Set @TriBrandOffer = @V1
+
+    ]%%
+    %%[
+    var @rsMerkleJobMetaData
+    SET @CampaignID = CampaignCode
+    SET @CellID = CellCode
+    SET @OfferID = OfferCode1
+    IF _isTestSend == false THEN
+    SET @rsMerkleJobMetaData = LookupRows("ent.Merkle_Job_Metadata", "JobID", jobid)
+    IF RowCount(@rsMerkleJobMetaData) == 0 THEN
+    UPSERTDE("ent.Merkle_Job_Metadata",1,"JobID",jobid,"EmailName",emailname_,"CampaignID",@CampaignID,"CellID",@CellID,"OfferID",@OfferID,"ExportSends","false")
+    ENDIF
+    ENDIF
+    /* Controls whether to show regular Flat Rate Shipping or Free Shipping on orders $50+ or $75+ */
+    /* To show Flat Rate Shipping use SET @ShowflatRateShipping = 'y' */
+    SET @ShowFlatRateShipping = "n"
+    /* To show a specific shipping offer use one of the below. This only is used when @ShowFlatRateShipping = 'n' */
+    /* For $50+ set @ShowShipBanner = 'FS50' */
+    /* For $75+ set @ShowShipBanner = 'FS75' */
+    /* For $50+ Holiday Season set @ShowShipBanner = 'FSHS50' */
+    SET @ShowShipBanner = 'FSHS50'
+    /* Controls inclusion of Conversant tracking pixels */
+    /* If @DisplayConversant is set to 'y' then a content area will be output before the closing </body> tag */
+    /* If @DisplayConversant is set to 'n' then the content area will not be output */
+    Set @DisplayConversant = 'y'
+    ]%%
+    %%[
+    /*Added for Equity bar*/
+    /* Ampscript for all the Loyalty lookups */
+    /* Define Debug Variables */
+    var @error
+    var @ErrorMessage
+    set @ErrorCount = 0
+    set @ErrorMessage = ''
+    /* Define data extensions */
+    var @DeTIBCOExpirationFile
+    var @DeTIBCORewardExport
+    var @DeTIBCOSummaryExport
+    set @DeTibcoExpirationFile = 'ent.TIBCO_Expiration_File_Import_Test'
+    set @DeTibcoRewardExport = 'ent.TIBCO_Reward_Export_Import_Test'
+    set @DeTibcoSummaryExport = 'ent.TIBCO_Summary_Export_Import_Test'
+    set @EmailAddress = EmailAddr
+    /* Loyalty Debug Flag. Set to Y to show loyalty field info at the bottom */
+    Var @DebugLoyalty
+    set @DebugLoyalty = 'Y'
+    /* Defines variables based on Merkle standard file layout */
+    VAR @mIID
+    VAR @mHID
+    VAR @mCUSTOMER_NUM
+    VAR @mCellName
+    VAR @mCellCode
+    VAR @mOfferCode1
+    VAR @mCoupon_Code_1
+    VAR @mDM_NEEDED
+    VAR @mKid_First_Name
+    VAR @mKid_Age
+    VAR @mCoupon_Code_2
+    VAR @mLoyalty_ID
+    VAR @FmirstName
+    VAR @mMiddleName
+    VAR @mLastName
+    VAR @mCampaignName
+    VAR @mOfferName
+    VAR @mSegmentName
+    VAR @mDmNeeded
+    VAR @mChildInfoNeeded
+    VAR @mBrandOfEnrollment
+    VAR @mKidFirstName
+    VAR @mPointsIndicator
+    VAR @mStoreClosest
+    VAR @mEmailAddress
+    VAR @mEmailText9
+    VAR @mEmailText10
+    VAR @mEmailText11
+    VAR @mEmailText12
+    VAR @mEmailText13
+    VAR @mEmailText14
+    VAR @mEmailText15
+    VAR @mCouponCode1
+    /* Sets variables based on Merkle standard file layout */
+    SET @mIID = [IID]
+    SET @mHID = [HID]
+    SET @mCUSTOMER_NUM = [CUSTOMER_NUM]
+    SET @mCellName = [CellName]
+    SET @mCellCode = [CellCode]
+    SET @mOfferCode1 = [OfferCode1]
+    SET @mCoupon_Code_1 = [Coupon_Code_1]
+    SET @mDM_NEEDED = [DM_NEEDED]
+    SET @mKid_First_Name = [Kid_First_Name]
+    SET @mKid_Age = [Kid_Age]
+    SET @mCoupon_Code_2 = [Coupon_Code_2]
+    SET @mLoyalty_ID = [Loyalty_ID]
+    SET @mFirstName = ProperCase([FIRST_NAME])
+    SET @mMiddleName = [MIDDLE_NAME]
+    SET @mLastName = ProperCase([LAST_NAME])
+    SET @mCampaignName = [CampaignName]
+    SET @mOfferName = [OfferName]
+    SET @mSegmentName = [Segment_Name]
+    SET @mDmNeeded = [DM_NEEDED]
+    SET @mChildInfoNeeded = [CHILD_INFO_NEEDED]
+    IF memberid == 7205420 THEN
+    SET @mBrandOfEnrollment = "CAR"
+    ELSEIF memberid == 7205422 THEN
+    SET @mBrandOfEnrollment = "OKB"
+    ENDIF
+    SET @mKidFirstName = [KID_FIRST_NAME]
+    SET @mPointsIndicator = [POINT_INDICATOR]/*THIS IS 'POINTS' IN LOYALTY EMAILS 'POINT' IN CAMPAIGN*/
+    SET @mStoreClosest = [STORE_CLOSEST]
+    SET @mEmailAddress = [EMAIL_ADDRESS]
+    SET @mEmailText9 = [Email_Text_9]
+    SET @mEmailText10 = [Email_Text_10]
+    SET @mEmailText11 = [Email_Text_11]
+    SET @mEmailText12 = [Email_Text_12]
+    SET @mEmailText13 = [Email_Text_13]
+    /*SET @mEmailText14 = [Email_Text_14]*/
+    SET @mEmailText15 = [Email_Text_15]
+    SET @mCouponCode1 = [Coupon_Code_1]
+    /* Tibco Expiration File */
+    set @rsTibcoExpirations = lookuprows(@DeTibcoExpirationFile,'EmailAddress',@EmailAddress)
+    if rowcount(@rsTibcoExpirations) == 1 then
+    set @rowTibcoExpirations = row(@rsTibcoExpirations,1)
+    SET @tefLoyaltyLabShopperId = field(@rowTibcoExpirations,'LoyaltyLabShopperId')
+    SET @tefRewardExpirationDate = field(@rowTibcoExpirations,'RewardExpirationDate')
+    SET @tefRewardExpirationValue = field(@rowTibcoExpirations,'RewardExpirationValue')
+    SET @tefPointsExpirationDate = field(@rowTibcoExpirations,'PointsExpirationDate')
+    SET @tefPointsExpirationValue = field(@rowTibcoExpirations,'PointsExpirationValue')
+    else
+    set @ErrorCount = Add(@ErrorCount,1)
+    set @ErrorMessage = Concat(@ErrorMessage,'No record found in DE TIBCO_Expiration_File.<br />')
+    endif
+    /* Tibco Reward Export File */
+    set @rsTibcoRewardExports = lookuprows(@DeTibcoRewardExport,'EmailAddress',@EmailAddress)
+    if rowcount(@rsTibcoRewardExports) == 1 then
+    set @rowTibcoRewardExport = row(@rsTibcoRewardExports,1)
+    SET @treLoyaltyLabShopperId = field(@rowTibcoRewardExport,'LoyaltyLabShopperId')
+    SET @treEnrollmentDate = field(@rowTibcoRewardExport,'EnrollmentDate')
+    SET @treCurrentPointsBalance = field(@rowTibcoRewardExport,'CurrentPointsBalance')
+    SET @treTotalRewardsBalance = field(@rowTibcoRewardExport,'TotalRewardsBalance')
+    /* SET @treTotalRewardsEarnedWithMostRecentTransaction =
+    field(@rowTibcoRewardExport,'TotalRewardsEarnedWithMostRecentTransaction') */
+    SET @treRewards1ID = field(@rowTibcoRewardExport,'Rewards1ID')
+    /* Reward IDs should always be 20 characters long. If it is less than 20 pad it with 9s */
+    /* Need to count how many RewardIDs are actually populated */
+    var @treRewardCounter
+    set @treRewardCounter = 0
+    /* Reward 01 */
+    var @i
+    var @zeroes
+    If length(@treRewards1ID) < 20 AND length(@treRewards1ID)> 13 then
+        set @zeroes = subtract('20',length(@treRewards1ID))
+        for @i = 1 to @zeroes do
+        set @treRewards1ID = concat('9',@treRewards1ID)
+        next @i
+        set @treRewards1IdDisplay = format(@treRewards1ID, '####-####-####-####-####')
+        endif
+        SET @treRewards1Expiration = formatDate(field(@rowTibcoRewardExport,'Rewards1Expiration'), "MM/DD/YYYY",
+        "","en-US")
+        if not empty(@treRewards1ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+        /* Reward 02 */
+        SET @treRewards2ID = field(@rowTibcoRewardExport,'Rewards2ID')
+        var @i
+        var @zeroes
+        If length(@treRewards2ID) < 20 AND length(@treRewards2ID)> 13 then
+            set @zeroes = subtract('20',length(@treRewards2ID))
+            for @i = 1 to @zeroes do
+            set @treRewards2ID = concat('9',@treRewards2ID)
+            next @i
+            set @treRewards2IdDisplay = format(@treRewards2ID, '####-####-####-####-####')
+            endif
+            SET @treRewards2Expiration = formatDate(field(@rowTibcoRewardExport,'Rewards2Expiration'), "MM/DD/YYYY",
+            "","en-US")
+            if not empty(@treRewards2ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+            /* Reward 03 */
+            SET @treRewards3ID = field(@rowTibcoRewardExport,'Rewards3ID')
+            var @i
+            var @zeroes
+            If length(@treRewards3ID) < 20 AND length(@treRewards3ID)> 13 then
+                set @zeroes = subtract('20',length(@treRewards3ID))
+                for @i = 1 to @zeroes do
+                set @treRewards3ID = concat('9',@treRewards3ID)
+                next @i
+                set @treRewards3IdDisplay = format(@treRewards3ID, '####-####-####-####-####')
+                endif
+                SET @treRewards3Expiration = formatDate(field(@rowTibcoRewardExport,'Rewards3Expiration'), "MM/DD/YYYY",
+                "","en-US")
+                if not empty(@treRewards3ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+                /* Reward 04 */
+                SET @treRewards4ID = field(@rowTibcoRewardExport,'Rewards4ID')
+                var @i
+                var @zeroes
+                If length(@treRewards4ID) < 20 AND length(@treRewards4ID)> 13 then
+                    set @zeroes = subtract('20',length(@treRewards4ID))
+                    for @i = 1 to @zeroes do
+                    set @treRewards4ID = concat('9',@treRewards4ID)
+                    next @i
+                    set @treRewards4IdDisplay = format(@treRewards4ID, '####-####-####-####-####')
+                    endif
+                    SET @treRewards4Expiration = formatDate(field(@rowTibcoRewardExport,'Rewards4Expiration'),
+                    "MM/DD/YYYY", "","en-US")
+                    if not empty(@treRewards4ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+                    /* Reward 05 */
+                    SET @treRewards5ID = field(@rowTibcoRewardExport,'Rewards5ID')
+                    var @i
+                    var @zeroes
+                    If length(@treRewards5ID) < 20 AND length(@treRewards5ID)> 13 then
+                        set @zeroes = subtract('20',length(@treRewards5ID))
+                        for @i = 1 to @zeroes do
+                        set @treRewards5ID = concat('9',@treRewards5ID)
+                        next @i
+                        set @treRewards5IdDisplay = format(@treRewards5ID, '####-####-####-####-####')
+                        endif
+                        SET @treRewards5Expiration = formatDate(field(@rowTibcoRewardExport,'Rewards5Expiration'),
+                        "MM/DD/YYYY", "","en-US")
+                        if not empty(@treRewards5ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+                        /* Reward 06 */
+                        SET @treRewards6ID = field(@rowTibcoRewardExport,'Rewards6ID')
+                        var @i
+                        var @zeroes
+                        If length(@treRewards6ID) < 20 AND length(@treRewards6ID)> 13 then
+                            set @zeroes = subtract('20',length(@treRewards6ID))
+                            for @i = 1 to @zeroes do
+                            set @treRewards6ID = concat('9',@treRewards6ID)
+                            next @i
+                            set @treRewards6IdDisplay = format(@treRewards6ID, '####-####-####-####-####')
+                            endif
+                            SET @treRewards6Expiration = formatDate(field(@rowTibcoRewardExport,'Rewards6Expiration'),
+                            "MM/DD/YYYY", "","en-US")
+                            if not empty(@treRewards6ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+                            /* Reward 07 */
+                            SET @treRewards7ID = field(@rowTibcoRewardExport,'Rewards7ID')
+                            var @i
+                            var @zeroes
+                            If length(@treRewards7ID) < 20 AND length(@treRewards7ID)> 13 then
+                                set @zeroes = subtract('20',length(@treRewards7ID))
+                                for @i = 1 to @zeroes do
+                                set @treRewards7ID = concat('9',@treRewards7ID)
+                                next @i
+                                set @treRewards7IdDisplay = format(@treRewards7ID, '####-####-####-####-####')
+                                endif
+                                SET @treRewards7Expiration =
+                                formatDate(field(@rowTibcoRewardExport,'Rewards7Expiration'), "MM/DD/YYYY", "","en-US")
+                                if not empty(@treRewards7ID) then set @treRewardCounter = add(@treRewardCounter,1) endif
+                                /* Reward 08 */
+                                SET @treRewards8ID = field(@rowTibcoRewardExport,'Rewards8ID')
+                                var @i
+                                var @zeroes
+                                If length(@treRewards8ID) < 20 AND length(@treRewards8ID)> 13 then
+                                    set @zeroes = subtract('20',length(@treRewards8ID))
+                                    for @i = 1 to @zeroes do
+                                    set @treRewards8ID = concat('9',@treRewards8ID)
+                                    next @i
+                                    set @treRewards8IdDisplay = format(@treRewards8ID, '####-####-####-####-####')
+                                    endif
+                                    SET @treRewards8Expiration =
+                                    formatDate(field(@rowTibcoRewardExport,'Rewards8Expiration'), "MM/DD/YYYY",
+                                    "","en-US")
+                                    if not empty(@treRewards8ID) then set @treRewardCounter = add(@treRewardCounter,1)
+                                    endif
+                                    /* Reward 09 */
+                                    SET @treRewards9ID = field(@rowTibcoRewardExport,'Rewards9ID')
+                                    var @i
+                                    var @zeroes
+                                    If length(@treRewards9ID) < 20 AND length(@treRewards9ID)> 13 then
+                                        set @zeroes = subtract('20',length(@treRewards9ID))
+                                        for @i = 1 to @zeroes do
+                                        set @treRewards9ID = concat('9',@treRewards9ID)
+                                        next @i
+                                        set @treRewards9IdDisplay = format(@treRewards9ID, '####-####-####-####-####')
+                                        endif
+                                        SET @treRewards9Expiration =
+                                        formatDate(field(@rowTibcoRewardExport,'Rewards9Expiration'), "MM/DD/YYYY",
+                                        "","en-US")
+                                        if not empty(@treRewards9ID) then set @treRewardCounter =
+                                        add(@treRewardCounter,1) endif
+                                        /* Reward 10 */
+                                        SET @treRewards10ID = field(@rowTibcoRewardExport,'Rewards10ID')
+                                        var @i
+                                        var @zeroes
+                                        If length(@treRewards10ID) < 20 AND length(@treRewards10ID)> 13 then
+                                            set @zeroes = subtract('20',length(@treRewards10ID))
+                                            for @i = 1 to @zeroes do
+                                            set @treRewards10ID = concat('9',@treRewards10ID)
+                                            next @i
+                                            set @treRewards10IdDisplay = format(@treRewards10ID,
+                                            '####-####-####-####-####')
+                                            endif
+                                            SET @treRewards10Expiration =
+                                            formatDate(field(@rowTibcoRewardExport,'Rewards10Expiration'), "MM/DD/YYYY",
+                                            "","en-US")
+                                            if not empty(@treRewards10ID) then set @treRewardCounter =
+                                            add(@treRewardCounter,1) endif
+                                            else
+                                            set @ErrorCount = Add(@ErrorCount,1)
+                                            set @ErrorMessage = Concat(@ErrorMessage,'No record found in DE
+                                            TIBCO_Reward_Export.<br />')
+                                            endif
+                                            /* Tibco LC Summary Email File */
+                                            set @rsTibcoSummaryExports =
+                                            lookuprows(@DeTibcoSummaryExport,'EmailAddress',@EmailAddress)
+                                            set @countRsTibcoSummaryExports = rowcount(@rsTibcoSummaryExports)
+                                            if @countRsTibcoSummaryExports == 1 then
+                                            Set @rsTibcoSummaryExports1 = "true"
+                                            set @rowTibcoSummaryExport = row(@rsTibcoSummaryExports,1)
+                                            SET @tseLoyaltyLabShopperId =
+                                            field(@rowTibcoSummaryExport,'LoyaltyLabShopperId')
+                                            SET @tseFirstName = field(@rowTibcoSummaryExport,'FirstName')
+                                            SET @tseLastName = field(@rowTibcoSummaryExport,'LastName')
+                                            SET @tseFirstPurchaseDate =
+                                            field(@rowTibcoSummaryExport,'FirstPurchaseDate')
+                                            SET @tseLastPurchaseDate = field(@rowTibcoSummaryExport,'LastPurchaseDate')
+                                            SET @tseNotificationType = field(@rowTibcoSummaryExport,'NotificationType')
+                                            SET @tseEnrollmentDate = field(@rowTibcoSummaryExport,'EnrollmentDate')
+                                            SET @tseCurrentPointsBalance =
+                                            field(@rowTibcoSummaryExport,'CurrentPointsBalance')
+                                            SET @tsePointsUntilNextReward =
+                                            field(@rowTibcoSummaryExport,'PointsUntilNextReward')
+                                            SET @tseSpendUntilNextReward =
+                                            field(@rowTibcoSummaryExport,'SpendUntilNextReward')
+                                            SET @tseTier = field(@rowTibcoSummaryExport,'Tier')
+                                            SET @tseGhostLoyaltyID = field(@rowTibcoSummaryExport,'GhostLoyaltyID')
+                                            SET @tsePointsEarnedToDate =
+                                            field(@rowTibcoSummaryExport,'PointsEarnedToDate')
+                                            SET @tseActiveOfferFlag = field(@rowTibcoSummaryExport,'ActiveOfferFlag')
+                                            SET @tsePreferencesCompletedFlag =
+                                            field(@rowTibcoSummaryExport,'PreferencesCompletedFlag')
+                                            SET @tseProfileCompleteFlag =
+                                            field(@rowTibcoSummaryExport,'ProfileCompleteFlag')
+                                            SET @tsePercentProfileComplete =
+                                            field(@rowTibcoSummaryExport,'PercentProfileComplete')
+                                            SET @tseCustomerStatus = field(@rowTibcoSummaryExport,'CustomerStatus')
+                                            SET @tseCurrentRewardBalance =
+                                            field(@rowTibcoSummaryExport,'CurrentRewardBalance')
+                                            SET @tseRewardsEarnedToDate =
+                                            field(@rowTibcoSummaryExport,'RewardsEarnedToDate')
+                                            SET @tseRewardsUsedToDate =
+                                            field(@rowTibcoSummaryExport,'RewardsUsedToDate')
+                                            else
+                                            set @ErrorCount = Add(@ErrorCount,1)
+                                            set @ErrorMessage = Concat(@ErrorMessage,'No record found in DE
+                                            TIBCO_Summary_Export.<br />')
+                                            endif
+                                            /* END ampscript for loyalty lookups */
+                                            /*End Equity bar*/
+
+
+
+                                            /* E SEGMENT CONDITIONAL SCRIPT - Use this script to bypass the coupon and
+                                            coupon related content when they want to run no coupon for E Segment */
+                                            /*
+                                            SET @OFFER = __AdditionalEmailAttribute2
+                                            IF @OFFER == 'Email_Text_10' THEN
+                                            SET @OFFER = AttributeValue(@OFFER)
+                                            ENDIF
+                                            IF @OFFER == "CAR_E" THEN ELSE
+                                            <!-- ADD COUPON & RELATED CONTENT HERE -->
+                                            ENDIF
+                                            */
+                                            /* //E SEGMENT CONDITIONAL SCRIPT */
+                                            ]%%
+
+                                            %%[</div>]%%
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml"
+    xmlns:o="urn:schemas-microsoft-com:office:office">
+
+<head>
+    <!--[if gte mso 9]><xml>
+	 <o:OfficeDocumentSettings>
+	  <o:AllowPNG/>
+	  <o:PixelsPerInch>96</o:PixelsPerInch>
+	 </o:OfficeDocumentSettings>
+	</xml><![endif]-->
+    <meta http-equiv="Content-Type" content="text/html" charset="iso-8859-1">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Carter's</title>
+    <link rel="stylesheet" type="text/css"
+        href="http://image.em.carters.com/lib/fe9b13727561007f75/m/1/CartersResponsiveTempBase.css">
+    <!--<link rel="stylesheet" type="text/css" href="http://image.em.carters.com/lib/fe9b13727561007f75/m/1/CartersResponsiveTempMobileBase.css">-->
+    <link rel="stylesheet" type="text/css"
+        href="http://image.em.carters.com/lib/fe9b13727561007f75/m/8/CartersResponsiveTempMobileBaseHybrid.css">
+    <style type="text/css">
+        * {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        html {
+            -webkit-text-size-adjust: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            outline: 0;
+        }
+
+        img {
+            display: block;
+        }
+
+        td {
+            mso-line-height-rule: exactly;
+        }
+
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+
+        /*Gmail number links*/
+        .gblue a {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+
+        /*Social Links*/
+        @media (max-width: 480px) {
+            .P18 {
+                width: 18% !important;
+            }
+
+            .P20 {
+                width: 20% !important;
+            }
+        }
+    </style>
+</head>
+
+<body bgcolor="#ffffff"
+    style="-webkit-text-size-adjust: none; -ms-text-size-adjust: none; -webkit-font-smoothing: antialiased;padding:0;">
+    %%=contentareabyname("Shared Items\Shared Contents\Convertro Pixel")=%%
+    <!--[if t]><![endif]-->
+    <!--[if t]><![endif]-->
+    <!--[if t]><![endif]-->
+    <div
+        style="color:#ffffff;display:none;width: 0px; height: 0px; overflow: hidden; position: absolute; min-height: 0px; line-height: 0px; font-size: 0px;">
+        Preheader goes here
+        &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    </div>
+    <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" bgcolor="#ffffff">
+        <tr>
+            <td align="center" valign="top">
+                <table cellpadding="0" cellspacing="0" border="0" align="center" width="636" bgcolor="#ffffff"
+                    class="container" style="margin:0 auto;">
+                    <tr>
+                        <td align="left" valign="top">
+                            <!--Prehead-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" class="hide">
+                                <tr>
+                                    <td class="H50" align="center" valign="middle" height="70"
+                                        style="font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#685c53;">
+                                        <a href="http://www.carters.com" target="_blank" alias="MULTI_MULTI_PREHEADER"
+                                            title="" style="color:#00a9e0; text-decoration:underline;"
+                                            class="PreheadLinks"><strong
+                                                style="color:#00a9e0; text-decoration:underline;font-weight:normal;"
+                                                class="PreheadLinks">Preheader goes here</strong></a>
+                                        <br>
+                                        <br> %%[ if _MessageContext == "VAWP" then else ]%%
+                                        <a href="%%view_email_url%%" target="_blank" alias="" title=""
+                                            style="color:#00a9e0; text-decoration:underline;"
+                                            class="PreheadLinks"><strong
+                                                style="color:#00a9e0; text-decoration:underline;font-weight:normal;"
+                                                class="PreheadLinks">View</strong></a> this message in your browser.
+                                        <br> %%[ endif ]%% To ensure you receive our emails, please add <a
+                                            href="mailto:carters.email@em.carters.com"
+                                            style="color:#00a9e0; text-decoration:underline;"
+                                            class="PreheadLinks"><strong
+                                                style="color:#00a9e0; text-decoration:underline;font-weight:normal;"
+                                                class="PreheadLinks">carters.email@em.carters.com</strong></a>&nbsp;to&nbsp;your&nbsp;address&nbsp;book.
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--Prehead End-->
+                            <!--Shipping Banner-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#00a9e0">
+                                <tr>
+                                    <td align="left" valign="top" width="2%"></td>
+                                    <!--Replace this cell with the cell code from CARFSBannerCellCode.html-->
+                                    <td class="F11H28 ShipL" align="left" valign="middle" width="70%" height="36"
+                                        style=" font-family:Arial, Helvetica, sans-serif; font-size:16px; color:#ffffff;font-weight:bold; vertical-align:middle;">
+                                        <a href="http://www.carters.com" target="_blank" alias="MULTI_MULTI_SHIPPING"
+                                            style="color:#ffffff; text-decoration:none;" class="BlueBar"><strong
+                                                style="color:#ffffff; text-decoration:none;" class="BlueBar">FREE
+                                                SHIPPING ON $50+ </strong></a></td>
+                                    <td class="F11H28 ShipR" align="right" valign="middle" width="26%" height="36"
+                                        style=" font-family:Arial, Helvetica, sans-serif; font-size:16px; color:#ffffff;font-weight:bold; vertical-align:middle;">
+                                        <a href="http://www.carters.com/find-a-store" target="_blank"
+                                            alias="MULTI_MULTI_FIND_A_STORE"
+                                            style="color:#ffffff; text-decoration:none;" class="BlueBar"><strong
+                                                style="color:#ffffff; text-decoration:none;" class="BlueBar">FIND A
+                                                STORE</strong></a></td>
+                                    <td align="left" valign="top" width="2%"></td>
+                                </tr>
+                            </table>
+                            <!--Shipping Banner End-->
+                            <!--Spacer-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top" width="100%" bgcolor="#ffffff" class="" height="25"
+                                        style="line-height:25px; font-size:25px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!--Spacer End-->
+                            <!--Logo-->
+                            <table cellpadding="0" align="center" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top" width="10" class="hide">&nbsp;</td>
+                                    <td align="center" valign="top" width="616">
+                                        <table class="w100P" align="center" cellpadding="0" cellspacing="0" border="0"
+                                            width="170">
+                                            <tr>
+                                                <td align="center" valign="middle" width="100%">
+                                                    <a href="http://www.carters.com/" alias="MULTI_MULTI_LOGO"
+                                                        target="_blank" title="Count on Carter's"><img
+                                                            class="CARLogoNew"
+                                                            src="http://image.em.carters.com/lib/fe9b13727561007f75/m/22/CAR_LOGO-rgbv2.jpg"
+                                                            alt="Carter's" title="Carter's" width="170" height="36"
+                                                            style="display:block;" border="0"></a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td align="left" valign="top" width="10" class="hide">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!--Logo End-->
+                            <!--Spacer-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td class="H20" align="left" valign="top" width="100%" bgcolor="#ffffff" height="25"
+                                        style="line-height:25px; font-size:25px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!--Spacer End-->
+                            <!--Nav-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr class="posRel navH">
+                                    <td class="hide" align="left" valign="top" width="10"></td>
+                                    <td align="left" valign="top" width="358">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <td class="navBG posAbs" width="112" align="left" valign="top"
+                                                    style=" font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:normal; color:#5b6770;">
+                                                    <a href="http://www.carters.com/carters-baby-girl" target="_blank"
+                                                        alias="BABY_GIRL_NAV"
+                                                        style="color:#5b6770; text-decoration:none;"
+                                                        class="NavLinks"><strong
+                                                            style="color:#5b6770; text-decoration:none;font-weight:normal;"
+                                                            class="NavLinks">BABY GIRL</strong></a></td>
+                                                <td class="navBB posAbs" width="107" align="left" valign="top"
+                                                    style=" font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:normal; color:#5b6770;">
+                                                    <a href="http://www.carters.com/carters-baby-boy" target="_blank"
+                                                        alias="BABY_BOY_NAV"
+                                                        style="color:#5b6770; text-decoration:none;"
+                                                        class="NavLinks"><strong
+                                                            style="color:#5b6770; text-decoration:none;font-weight:normal;"
+                                                            class="NavLinks">BABY BOY</strong></a></td>
+                                                <td class="navTG posAbs" width="139" align="left" valign="top"
+                                                    style=" font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:normal; color:#5b6770;">
+                                                    <a href="http://www.carters.com/carters-toddler-girl"
+                                                        target="_blank" alias="TODDLER_GIRL_NAV"
+                                                        style="color:#5b6770; text-decoration:none;"
+                                                        class="NavLinks"><strong
+                                                            style="color:#5b6770; text-decoration:none;font-weight:normal;"
+                                                            class="NavLinks">TODDLER GIRL</strong></a></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td align="left" valign="top" width="258">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <td class="navTB posAbs" width="153" align="left" valign="top"
+                                                    style=" font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:normal; color:#5b6770;">
+                                                    <a href="http://www.carters.com/carters-toddler-boy" target="_blank"
+                                                        alias="TODDLER_BOY_NAV"
+                                                        style="color:#5b6770; text-decoration:none;"
+                                                        class="NavLinks"><strong
+                                                            style="color:#5b6770; text-decoration:none;font-weight:normal;"
+                                                            class="NavLinks">TODDLER BOY</strong></a></td>
+                                                <td class="navG posAbs" width="75" valign="top"
+                                                    style=" font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:normal; color:#5b6770; text-align:left;">
+                                                    <a href="http://www.carters.com/carters-kid-girl" target="_blank"
+                                                        alias="KID_GIRL_NAV"
+                                                        style="color:#5b6770; text-decoration:none;"
+                                                        class="NavLinks"><strong
+                                                            style="color:#5b6770; text-decoration:none;font-weight:normal;"
+                                                            class="NavLinks">GIRL</strong></a></td>
+                                                <td class="navB posAbs" width="30" align="left" valign="top"
+                                                    style=" font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:normal; color:#5b6770;">
+                                                    <a href="http://www.carters.com/carters-kid-boy" target="_blank"
+                                                        alias="KID_BOY_NAV" style="color:#5b6770; text-decoration:none;"
+                                                        class="NavLinks"><strong
+                                                            style="color:#5b6770; text-decoration:none;font-weight:normal;"
+                                                            class="NavLinks">BOY</strong></a></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td class="hide" align="left" valign="top" width="10"></td>
+                                </tr>
+                            </table>
+                            <!--Nav End-->
+                            <!--Spacer-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top" width="100%" bgcolor="#ffffff" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#e4e4e4" align="left" valign="top" width="100%" class="" height="1"
+                                        style="line-height:1px; font-size:1px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!--Spacer End-->
+                            %%=ContentAreaByName("Shared Items\Shared Contents\Loyalty\Equity
+                            Bar\RM-EquityBar-2018Campaign_MI")=%%
+
+                            %%=ContentAreaByName("Shared Items\Shared Contents\Loyalty\RM-ExpiringRewardsBanner_MI")=%%
+
+                            <!--Add Body Content between these comments only! Do not touch the rest of the template unless updating the legal area -->
+
+
+
+
+
+                            <!--Spacer-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top" width="100%" bgcolor="#ffffff" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!--Spacer End-->
+                            <!--Closest Store Banner-->
+                            %%[Set @CSB = "N"
+                            IF @CSB == "Y" THEN]%%
+                            %%=ContentAreaByName("my contents\_Closest_Store\ClosestStoreBanner")=%%
+                            %%[ENDIF]%%
+                            <!--/Closest Store Banner-->
+
+                            <!-- BACKGROUND TABLE BREAK -->
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" bgcolor="#ffffff">
+        <tr>
+            <td align="center" valign="top">
+                <table cellpadding="0" cellspacing="0" border="0" align="center" width="636" bgcolor="#ffffff"
+                    class="container" style="margin:0 auto;">
+                    <tr>
+                        <td align="left" valign="top">
+                            <!-- //BACKGROUND TABLE BREAK -->
+
+                            <!-- Add 1/3 of body content here -->
+                            <!--Top Banner-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 127px">
+                                            <a href="https://www.carters.com" target="_blank" alias="MULTI_MULTI_IMG"
+                                                title="Email Exclusive Extra 25% Off">
+                                                <div class="content-wrapper" height="100%">
+                                                    <img src="images/CAR_03272018_TUE_01.gif" style="display: block;"
+                                                        width="636" height="127" border="0"
+                                                        alt="Email Exclusive Extra 25% Off">
+                                            </a>
+                                            <div class="text-wrapper"
+                                                style="width: 100%; position: relative; margin-top: -16.5%; margin-left: 75%; margin-bottom: 10%;">
+                                                <strong
+                                                    style="font-size: 21px; background-color: #019cde; color: #ffffff; display: inline-block; padding: 7px 8px 5px; font-family: Arial, Helvetica, sans-serif;">FOR
+                                                    YOU</strong>
+                                            </div>
+                                        </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!--/Top Banner-->
+                                <!--50% off ES-->
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 375;">
+                                            <a href="https://www.carters.com/" target="_blank" alias="MULTI_MULTI_IMG"
+                                                title="50% Off Everything">
+                                                <img src="images/CAR_03272018_TUE_02.jpg" style="display: block;"
+                                                    width="636" height="375" border="0" alt="50% Off Everything"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 69px;">
+                                            <a href="http://www.carters.com/carters-baby-girl-sale-1" target="_blank"
+                                                alias="BABY_GIRL_CTA" title="Baby Girl">
+                                                <img src="images/CAR_03272018_TUE_03.gif" style="display: inline-block;"
+                                                    width="211" height="69" border="0" alt="Baby Girl"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 69px;">
+                                            <a href=" http://www.carters.com/carters-toddler-girl-sale-1"
+                                                target="_blank" alias="TODDLER_GIRL_CTA" title="Toddler Girl">
+                                                <img src="images/CAR_03272018_TUE_04.gif" style="display: block;"
+                                                    width="211" height="69" border="0" alt="Toddler Girl"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="214px">
+                                        <div style="height: 69px;">
+                                            <a href="http://www.carters.com/carters-kid-girl-sale-1" target="_blank"
+                                                alias="KID_GIRL_CTA" title="Girl">
+                                                <img src="images/CAR_03272018_TUE_05.gif" style="display: block;"
+                                                    width="214" height="69" border="0" alt="Girl"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 64px;">
+                                            <a href="http://www.carters.com/carters-baby-boy-sale-1" target="_blank"
+                                                alias="BABY_BOY_CTA" title="Baby Boy">
+                                                <img src="images/CAR_03272018_TUE_06.gif" style="display: block;"
+                                                    width="211" height="64" border="0" alt="Baby Boy"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 64px;">
+                                            <a href="http://www.carters.com/carters-toddler-boy-sale-1" target="_blank"
+                                                alias="TODDLER_BOY_CTA" title="Toddler Boy">
+                                                <img src="images/CAR_03272018_TUE_07.gif" style="display: block;"
+                                                    width="211" height="64" border="0" alt="Toddler Boy"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="214px">
+                                        <div style="height: 64px;">
+                                            <a href="http://www.carters.com/carters-kid-boy-sale-1" target="_blank"
+                                                alias="KID_BOY_CTA" title="Boy">
+                                                <img src="images/CAR_03272018_TUE_08.gif" style="display: block;"
+                                                    width="214" height="64" border="0" alt="Boy"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="center" valign="top">
+                                        <div style="height: 64px;">
+                                            <a href="https://www.carters.com/find-a-store" target="_blank"
+                                                alias="MULTI_MULTI_FIND_A_STORE" title="Find A Store">
+                                                <img src="images/CAR_03272018_TUE_09.gif" style="display: block;"
+                                                    width="636" height="71" border="0" alt="Find A Store"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--/50% off ES-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td bgcolor="#ffffff" height="30" style="line-height:30px; font-size:30px;">&nbsp;
+                                    </td>
+                                </tr>
+                            </table>
+
+
+
+                            <!-- BACKGROUND TABLE BREAK -->
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" bgcolor="#ffffff">
+        <tr>
+            <td align="center" valign="top">
+                <table cellpadding="0" cellspacing="0" border="0" align="center" width="636" bgcolor="#ffffff"
+                    class="container" style="margin:0 auto;">
+                    <tr>
+                        <td align="left" valign="top">
+                            <!-- //BACKGROUND TABLE BREAK -->
+
+                            <!-- Add 1/3 of body content here -->
+                            <!--Lemon & Denim-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 193px">
+                                            <a href="https://www.carters.com" target="_blank" alias="MULTI_GIRL_CTA"
+                                                title="Lemon and Denim">
+                                                <img src="images/CAR_03272018_TUE_13.jpg" style="display: block;"
+                                                    width="636" height="193" border="0" alt="Lemon and Denim"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636">
+                                        <div style="height: 574px">
+                                            <a href="https://www.carters.com/carters-marketing-toddler-girl-lemon-and-denim"
+                                                target="_blank" alias="TODDLER_GIRL_IMG"
+                                                title="Lemon and Denim Toddler Girl">
+                                                <img src="images/CAR_03272018_TUE_11.jpg" style="display: block;"
+                                                    width="282" height="574" border="0"
+                                                    alt="Lemon and Denim Toddler Girl"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="354px">
+                                        <div style="height: 574px">
+                                            <a href="https://www.carters.com/carters-marketing-toddler-boy-lemon-and-denim"
+                                                target="_blank" alias="TODDLER_BOY_IMG"
+                                                title="Lemon and Denim Toddler Boy">
+                                                <img src="images/CAR_03272018_TUE_12.jpg" style="display: block;"
+                                                    width="354" height="574" border="0"
+                                                    alt="Lemon and Denim Toddler Boy"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 500px">
+                                            <a href="https://www.carters.com/carters-marketing-toddler-girl-lemon-and-denim"
+                                                target="_blank" alias="TODDLER_GIRL_IMG"
+                                                title="Ruffles &#38; Eyelet Lace">
+                                                <img src="images/CAR_03272018_TUE_13-14.jpg" style="display: block;"
+                                                    width="636" height="500" border="0"
+                                                    alt="Ruffles &#38; Eyelet Lace"></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 627px">
+                                            <a href="https://www.carters.com/carters-marketing-toddler-boy-lemon-and-denim"
+                                                target="_blank" alias="TODDLER_BOY_IMG" title="Smooth Sailin&#39;">
+                                                <img src="images/CAR_03272018_TUE_14.jpg" style="display: block;"
+                                                    width="636" height="627" border="0" alt="Smooth Sailin&#39;"></a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 65px;">
+                                            <a href="https://www.carters.com/carters-marketing-baby-girl-lemon-and-denim"
+                                                target="_blank" alias="BABY_GIRL_CTA" title="Baby Girl">
+                                                <img src="images/CAR_03272018_TUE_15.gif" style="display: block;"
+                                                    width="211" height="65" border="0" alt="Baby Girl"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 65px;">
+                                            <a href="https://www.carters.com/carters-marketing-toddler-girl-lemon-and-denim"
+                                                target="_blank" alias="TODDLER_GIRL_CTA" title="Toddler Girl">
+                                                <img src="images/CAR_03272018_TUE_16.gif" style="display: block;"
+                                                    width="211" height="65" border="0" alt="Toddler Girl"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="214px">
+                                        <div style="height: 65px;">
+                                            <a href="https://www.carters.com/carters-marketing-kid-girl-lemon-and-denim"
+                                                target="_blank" alias="KID_GIRL_CTA" title="Girl">
+                                                <img src="images/CAR_03272018_TUE_17.gif" style="display: block;"
+                                                    width="214" height="65" border="0" alt="Girl"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 67px;">
+                                            <a href="https://www.carters.com/carters-marketing-baby-boy-lemon-and-denim"
+                                                target="_blank" alias="BABY_BOY_CTA" title="Baby Boy">
+                                                <img src="images/CAR_03272018_TUE_18.gif" style="display: block;"
+                                                    width="211" height="67" border="0" alt="Baby Boy"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="211px">
+                                        <div style="height: 67px;">
+                                            <a href="https://www.carters.com/carters-marketing-toddler-boy-lemon-and-denim"
+                                                target="_blank" alias="TODDLER_BOY_CTA" title="Toddler Boy">
+                                                <img src="images/CAR_03272018_TUE_19.gif" style="display: block;"
+                                                    width="211" height="67" border="0" alt="Toddler Boy"></a>
+                                        </div>
+                                    </td>
+                                    <td align="left" valign="top" width="214px">
+                                        <div style="height: 67px;">
+                                            <a href="https://www.carters.com/carters-marketing-kid-boy-lemon-and-denim"
+                                                target="_blank" alias="KID_BOY_CTA" title="Boy">
+                                                <img src="images/CAR_03272018_TUE_20.gif" style="display: block;"
+                                                    width="214" height="67" border="0" alt="Boy"></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--/Lemon & Denim-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td bgcolor="#ffffff" height="30" style="line-height:30px; font-size:30px;">&nbsp;
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- BACKGROUND TABLE BREAK -->
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" bgcolor="#ffffff">
+        <tr>
+            <td align="center" valign="top">
+                <table cellpadding="0" cellspacing="0" border="0" align="center" width="636" bgcolor="#ffffff"
+                    class="container" style="margin:0 auto;">
+                    <tr>
+                        <td align="left" valign="top">
+                            <!-- //BACKGROUND TABLE BREAK -->
+
+                            <!-- Add 1/3 of body content here -->
+                            <!--Collectible bodysuits-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 292px;">
+                                            <a href="https://www.carters.com/carters-doorbusters" target="_blank"
+                                                alias="BABY_NEUTRAL_IMG" title="Collectible Bodysuits">
+                                                <img src="images/CAR_03272018_TUE_21.jpg" style="display: block;"
+                                                    width="636" height="292" border="0" alt="Collectible Bodysuits"></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 67px;">
+                                            <a href="http://www.carters.com/carters-baby-girl-doorbusters-1#prefn1=filterNavLevel1&prefv1=Bodysuits"
+                                                target="_blank" alias="BABY_GIRL_IMG" title="Baby Girl">
+                                                <img src="images/CAR_03272018_TUE_22.jpg" style="display: block;"
+                                                    width="636" height="67" border="0" alt="Baby Girl"></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 115px;">
+                                            <a href="http://www.carters.com/carters-baby-boy-doorbusters-1?navID=header#prefn1=filterNavLevel1&prefv1=Bodysuits"
+                                                target="_blank" alias="BABY_BOY_IMG" title="Baby Boy">
+                                                <img src="images/CAR_03272018_TUE_23.jpg" style="display: block;"
+                                                    width="636" height="115" border="0" alt="Baby Boy"></a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--/Collectible bodysuits-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td bgcolor="#ffffff" height="30" style="line-height:30px; font-size:30px;">&nbsp;
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--PJs-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="80px">
+                                        <div style="height: 416px;">
+                                            <a href="http://www.carters.com/carters-kid-boy-doorbusters-1#prefn1=filterNavLevel1&prefv1=Pajamas"
+                                                target="_blank" alias="KID_BOY_IMG"
+                                                title="Limited Edition Spring PJs Boy">
+                                                <img src="images/CAR_03272018_TUE_24.jpg" style="display: block;"
+                                                    width="80" height="416" border="0"
+                                                    alt="Limited Edition Spring PJs Boy"></a>
+                                    </td>
+                                    <td align="left" valign="top" width="107px">
+                                        <div style="height: 416px;">
+                                            <a href=" http://www.carters.com/carters-baby-boy-doorbusters-1#prefn1=filterNavLevel1&prefv1=Pajamas"
+                                                target="_blank" alias="BABY_BOY_IMG"
+                                                title="Limited Edition Spring PJs Baby Boy">
+                                                <img src="images/CAR_03272018_TUE_25.jpg" style="display: block;"
+                                                    width="107" height="416" border="0"
+                                                    alt="Limited Edition Spring PJs Baby Boy"></a>
+                                    </td>
+                                    <td align="left" valign="top" width="259px">
+                                        <div style="height: 416px;">
+                                            <a href="https://www.carters.com" target="_blank" alias="MULTI_MULTI_IMG"
+                                                title="Limited Edition Spring PJs">
+                                                <img src="images/CAR_03272018_TUE_26.jpg" style="display: block;"
+                                                    width="259" height="416" border="0"
+                                                    alt="Limited Edition Spring PJs"></a>
+                                    </td>
+                                    <td align="left" valign="top" width="96px">
+                                        <div style="height: 416px;">
+                                            <a href="http://www.carters.com/carters-kid-girl-doorbusters-1#prefn1=filterNavLevel1&prefv1=Pajamas"
+                                                target="_blank" alias="KID_GIRL_IMG"
+                                                title="Limited Edition Spring PJs Girl">
+                                                <img src="images/CAR_03272018_TUE_27.jpg" style="display: block;"
+                                                    width="96" height="416" border="0"
+                                                    alt="Limited Edition Spring PJs Girl"></a>
+                                    </td>
+                                    <td align="left" valign="top" width="94px">
+                                        <div style="height: 416px;">
+                                            <a href="http://www.carters.com/carters-baby-girl-doorbusters-1#prefn1=filterNavLevel1&prefv1=Pajamas "
+                                                target="_blank" alias="BABY_GIRL_IMG"
+                                                title="Limited Edition Spring PJs Baby Girl">
+                                                <img src="images/CAR_03272018_TUE_28.jpg" style="display: block;"
+                                                    width="94" height="416" border="0"
+                                                    alt="Limited Edition Spring PJs Baby Girl"></a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 32px;">
+                                            <a href="https://www.carters.com" target="_blank" alias=""
+                                                title="Limited Edition Spring PJs">
+                                                <img src="images/CAR_03272018_TUE_30.gif" style="display: block;"
+                                                    width="636" height="32" border="0"
+                                                    alt="Limited Edition Spring PJs"></a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <img src="images/spacer.gif" width="80" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="107" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="24" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="71" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="140" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="24" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="96" height="1" alt=""></td>
+                                    <td>
+                                        <img src="images/spacer.gif" width="94" height="1" alt=""></td>
+                                </tr>
+                            </table>
+                            <!--/PJs-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td bgcolor="#ffffff" height="30" style="line-height:30px; font-size:30px;">&nbsp;
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--Rewarding Moments -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="position:relative;">
+                                <tr>
+                                    <td align="left" valign="top" width="636px">
+                                        <div style="height: 225px;">
+                                            <a href="https://www.carters.com/on/demandware.store/Sites-Carters-Site/default/Loyalty-Start?id=carters"
+                                                target="_blank" alias="" title="Rewarding Moments">
+                                                <img src="images/CAR_03272018_TUE_29.jpg" style="display: block;"
+                                                    width="636" height="225" border="0" alt="Rewarding Moments"></a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--/Rewarding Moments -->
+
+
+                            <!-- BACKGROUND TABLE BREAK -->
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" bgcolor="#ffffff">
+        <tr>
+            <td align="center" valign="top">
+                <table cellpadding="0" cellspacing="0" border="0" align="center" width="636" bgcolor="#ffffff"
+                    class="container" style="margin:0 auto;">
+                    <tr>
+                        <td align="left" valign="top">
+                            <!-- //BACKGROUND TABLE BREAK -->
+
+                            <!-- BOSS BANNER -->
+                            %%[
+                            /* Set @ShowBOSS_Banner = "Y" if you want it to populate. Set it to "N" if you don't. */
+                            SET @ShowBOSS_Banner = "N"
+                            IF @ShowBOSS_Banner == "Y" THEN
+                            ]%%
+                            %%=ContentAreaByName("My Contents\BOSS\Carters_BOSS_Banner")=%%
+                            %%[
+                            ELSE
+                            ENDIF
+                            ]%%
+                            <!-- //BOSS BANNER -->
+
+                            <!-- TRIBRAND FOOTER -->
+                            %%=ContentAreaByName("Shared Items\Shared Contents\TriBrandFooter\TriBrand_Footer")=%%
+                            <!-- //TRIBRAND FOOTER -->
+
+                            <!-- COUPON -->
+                            %%[
+                            SET @Show_Coupon = "Y"
+                            IF @Show_Coupon == "Y" THEN
+                            ]%%
+                            %%=ContentAreaByName("My Contents\Campaign Coupons\Coupon_AMPscript_Master")=%%
+                            %%[ ENDIF ]%%
+                            <!-- //COUPON -->
+
+                            <!--/Add Body Content-->
+
+
+                            <!--Footer-->
+                            <!--Social Icons Footer-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td bgcolor="#e3e3e3" align="left" valign="top" width="100%" class="" height="1"
+                                        style="line-height:1px; font-size:1px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="100%" bgcolor="#ffffff" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="88%">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <td class="P18" width="17%" align="left" valign="top"><a
+                                                        href="http://www.facebook.com/carters" target="_blank"
+                                                        alias="Facebook" title="Facebook"><img
+                                                            src="http://image.em.carters.com/lib/fe9a13727561007f74/m/1/ShipConf_Responsive_Facebook.jpg"
+                                                            alt="Facebook" title="Facebook" class="HW55" width="59"
+                                                            height="59" style="display:block;" border="0"></a></td>
+                                                <td width="20%" align="center" valign="top"><a
+                                                        href="http://www.youtube.com/cartersbabiesandkids"
+                                                        target="_blank" alias="YouTube" title="YouTube"><img
+                                                            src="http://image.em.carters.com/lib/fe9a13727561007f74/m/1/ShipConf_Responsive_YouTube.jpg"
+                                                            alt="YouTube" title="YouTube" class="HW55" width="59"
+                                                            height="59" style="display:block;" border="0"></a></td>
+                                                <td class="P20" width="22%" align="center" valign="top"><a
+                                                        href="https://twitter.com/Carters" target="_blank"
+                                                        alias="Twitter" title="Twitter"><img
+                                                            src="http://image.em.carters.com/lib/fe9a13727561007f74/m/1/ShipConf_Responsive_Twitter.jpg"
+                                                            alt="Twitter" title="Twitter" class="HW55" width="59"
+                                                            height="59" style="display:block;" border="0"></a></td>
+                                                <td width="20%" align="center" valign="top"><a
+                                                        href="http://pinterest.com/CartersBabyKids/" target="_blank"
+                                                        alias="Pinterest" title="Pinterest"><img
+                                                            src="http://image.em.carters.com/lib/fe9a13727561007f74/m/1/ShipConf_Responsive_Pinterest.jpg"
+                                                            alt="Pinterest" title="Pinterest" class="HW55" width="59"
+                                                            height="59" style="display:block;" border="0"></a></td>
+                                                <td class="P18" width="17%" align="right" valign="top"><a
+                                                        href="http://instagram.com/carters" target="_blank"
+                                                        alias="Instagram" title="Instagram"><img
+                                                            src="http://image.em.carters.com/lib/fe9a13727561007f74/m/1/ShipConf_Responsive_Instagram.jpg"
+                                                            alt="Instagram" title="Instagram" class="HW55" width="59"
+                                                            height="59" style="display:block;" border="0"></a></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="100%" bgcolor="#ffffff" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#e3e3e3" align="left" valign="top" width="100%" class="" height="1"
+                                        style="line-height:1px; font-size:1px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top" width="100%" bgcolor="#ffffff" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td bgcolor="#f1f1f1" align="left" valign="top" width="100%" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="center" valign="middle" width="88%" height="30" bgcolor="#f1f1f1"
+                                        style=" font-family:Arial, Helvetica, sans-serif; font-weight:normal; font-size:16px;color:#666666;"
+                                        class="F32">
+                                        &copy; %%=Datepart(Now(),"Y")=%% carter's inc. | <a
+                                            href="http://www.carters.com/find_a_store" target="_blank"
+                                            style="color:#666666; text-decoration:none;"
+                                            alias="MULTI_MULTI_FIND_A_STORE" title="Store Locator"
+                                            class="footerLink"><strong
+                                                style="color:#666666; text-decoration:none;font-weight:normal;"
+                                                class="footerLink">Store Locator</strong></a> | <a
+                                            href="http://www.carters.com/cs-contactus.html" target="_blank"
+                                            style="color:#666666; text-decoration:none;" alias="MULTI_MULTI_CONTACT_US"
+                                            title="Contact Us" class="footerLink"><strong
+                                                style="color:#666666; text-decoration:none;font-weight:normal;"
+                                                class="footerLink">Contact&nbsp;Us</strong></a> | <a
+                                            href="http://www.carters.com/privacy/privacy-policy.html" target="_blank"
+                                            style="color:#666666; text-decoration:none;"
+                                            alias="MULTI_MULTI_PRIVACY_POLICY" title="Privacy Policy"
+                                            class="footerLink"><strong
+                                                style="color:#666666; text-decoration:none;font-weight:normal;"
+                                                class="footerLink">Privacy&nbsp;Policy</strong></a>
+                                        <br><br>
+                                        <strong style="font-size:18px;" class="gblue F34">Customer Service:
+                                            1-877-333-0117</strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#f1f1f1" align="left" valign="top" width="100%" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top" width="100%" class="" height="20"
+                                        style="line-height:20px; font-size:20px;">&nbsp;</td>
+                                </tr>
+                            </table>
+                            <!--Social Icons Footer End-->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="left" valign="top"
+                                        style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#666666; vertical-align:top;"
+                                        class="footerLink2 F24">
+                                        %%[ IF @rsTibcoSummaryExports1 != 'true' then else ]%%
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr>
+                                                <td valign="top" align="left" style="font-size:0px;line-height:0px;">
+                                                    <img src="http://image.em.carters.com/lib/fe9b13727561007f75/m/2/Diamond1.jpg"
+                                                        width="10" height="12"
+                                                        style="display:inline; vertical-align:middle;" /></td>
+                                                <td class="padD F24" valign="top" align="left"
+                                                    style="font-size: 12px; color:#666666; font-family: Arial,Helvetica,sans-serif;text-align:left;">
+                                                    One moment please: Base Rewarding Moments points will show up in
+                                                    your account within 48 hours of order shipment or in-store pick up.
+                                                    Bonus points, if applicable, may be awarded separately within 72
+                                                    hours of order shipment or in-store pick up.</td>
+                                            </tr>
+                                        </table>
+                                        <br>
+                                        Rewards are not legal tender and will expire on the expiration date listed on
+                                        the certificate. No cash back. Rewards can be earned and redeemed for
+                                        merchandise only at Carter's and OshKosh B'gosh owned and operated stores in the
+                                        U.S, and Puerto Rico, and at carters.com, oshkosh.com and skiphop.com. Carter's
+                                        reserves the right to modify or discontinue this offer at any time. Void where
+                                        prohibited. *Exclusions apply. See <a
+                                            href="http://www.carters.com/loyaltyTerms-Conditions.html" target="_blank"
+                                            alias="MULTI_MULTI_TERMS" title="Terms &amp; Conditions"
+                                            style="color:#666666; text-decoration:underline;"
+                                            class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">Terms &amp; Conditions</strong></a> for details.
+                                        <br>
+                                        %%[ENDIF]%%
+                                        <br>
+                                        <strong>Store Locator</strong>
+                                        <br> To find a location near you, visit our website at <a
+                                            href="http://www.carters.com/find_a_store" target="_blank"
+                                            alias="MULTI_MULTI_FIND_A_STORE" title="Carters.com"
+                                            style="color:#666666; text-decoration:underline;"
+                                            class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">Carters.com</strong></a>
+                                        <br>
+                                        <br> For general inquiries, please call our Consumer Affairs at <strong
+                                            style="color:#666666; text-decoration:none;font-weight:normal;"
+                                            class="footerLink gblue">888-782-9548</strong>
+                                        <br> For questions on your order, or to place an order, please call our Online
+                                        Store at <strong style="color:#666666; text-decoration:none;font-weight:normal;"
+                                            class="footerLink gblue">877-333-0117</strong>
+                                        <br>
+                                        <br> In-store promotions valid only in Carter's retail stores in the U.S. and
+                                        Puerto Rico. Online promotions valid at <strong
+                                            style="color:#666666; text-decoration:none;font-weight:normal;"
+                                            class="footerLink gblue">carters.com</strong>. Percent-off savings based on
+                                        MSRP. Online prices, promotions and selection may differ from those in our
+                                        retail stores. Not valid for cash. No adjustments on previous purchases.
+                                        Available while supplies last. Carter's reserves the right to modify or
+                                        discontinue these promotions at any time.
+                                        <br>
+                                        <br>
+
+                                        <!--ADD LEGAL from Link Doc HERE (EXCLUDE COUPON LEGAL): Put it in order as shown in Link Doc-->
+                                        BUY 1 GET 2 FREE DOORBUSTER: First item at MSRP. Additional items of equal or
+                                        lesser value. Excludes clearance. Select styles. Discount reflected in cart
+                                        online.
+                                        <br>
+                                        <br> 50% OFF EVERYTHING: Savings based on MSRP. Prices as marked online.
+                                        Excludes doorbusters, clearance, sneak peek, Little Planet, Skip Hop,
+                                        non-Carter’s and non-OshKosh branded footwear.
+                                        <br>
+                                        <br> FREE SHIPPING: Free standard U.S. shipping on Carter's, OshKosh B'gosh and
+                                        Skip Hop online orders of $50 or more. No code required at checkout on
+                                        carters.com, oshkosh.com, or skiphop.com. Offer valid through March 31, 2018.
+                                        Valid on only one shipping address per order. Promotion not valid on purchase of
+                                        gift cards, express shipping or for shipments to U.S. P.O. boxes or U.S.
+                                        Territories. Prices, promotions and selections may differ from those in our
+                                        retail stores. Promotion not valid in retail stores. Not valid for cash. No
+                                        adjustments on previous purchases. We reserve the right to change or cancel this
+                                        promotion at any time.
+                                        <br>
+                                        <br>
+
+                                        <!--/ADD LEGAL from Link Doc HERE-->
+
+                                        <!-- COUPON LEGAL -->
+                                        %%[ IF @Show_Coupon == "Y" THEN ]%%
+                                        %%=v(@LegalCopy)=%%
+                                        %%[ ENDIF ]%%
+                                        <!-- //COUPON LEGAL -->
+
+                                        <strong>Were you forwarded this email?</strong>
+                                        <br>
+                                        <a href="http://www.carters.com/" alias="MULTI_MULTI_FORWARD"
+                                            title="Sign up for Carter's emails" target="_blank"
+                                            style="color:#666666; text-decoration:underline;"
+                                            class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">Sign up for Carter's emails</strong></a>.
+                                        <br>
+                                        <br>
+                                        <strong>Privacy Policy</strong>
+                                        <br> Carter's values its customers and respects their privacy. <a
+                                            href="http://www.carters.com/privacy/privacy-policy.html"
+                                            alias="MULTI_MULTI_PRIVACY_POLICY" title="Privacy Policy" target="_blank"
+                                            style="color:#666666; text-decoration:underline;"
+                                            class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">View</strong></a> our Privacy Policy.
+                                        <br>
+                                        <br>
+                                        <strong>Unsubscribe</strong>
+                                        <br> To unsubscribe from our email list, just <a href="%%profile_center_url%%"
+                                            alias="MULTI_MULTI_UNSUBSCRIBE"
+                                            title="To unsubscribe from our email list, just click here." target="_blank"
+                                            style="color:#666666; text-decoration:underline;"
+                                            class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">click here</strong></a>. To manage your email
+                                        preferences, <a href="%%profile_center_url%%" alias="MULTI_MULTI_PREFERENCE"
+                                            title="To manage your email preferences, click here." target="_blank"
+                                            style=" color: #666666; " class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">click here</strong></a>.
+                                        <br>
+                                        <br>
+                                        <strong>Return Policy</strong>
+                                        <br>
+                                        <a href="http://www.carters.com/Returns/cs-returns,default,pg.html?id=carters"
+                                            alias="MULTI_MULTI_RETURN_POLICY"
+                                            title="Click here to view our Return Policy." target="_blank"
+                                            style="color:#666666; text-decoration:underline;"
+                                            class="footerLink2"><strong
+                                                style="color:#666666; text-decoration:underline;font-weight:normal;"
+                                                class="footerLink2">Click to view our Return Policy</strong></a>.
+                                        <br>
+                                        <br>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" height="28"
+                                        style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#666666; vertical-align:top;"
+                                        class="footerLink F24">&copy;%%Member_Busname%%, %%Member_Addr%%,
+                                        %%Member_City%%, %%Member_State%% %%Member_PostalCode%%
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--Footer End-->
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <custom name="opencounter" type="tracking">
+        %%[ */ Output conversant pixesl */ if @DisplayConversant == 'y' then ]%% %%=contentareabyname('My
+        Contents\Conversant\Conversant')=%% %%[else endif]%%
+        <table width="1" height="1" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td style="font-size:0px; line-height:0px;"><img
+                        src="http://mi.carters.com/p/up/cc5c7dbc4eaf49f6/o.gif?mi_u=%%=v(md5(emailaddr))=%%&mi_ecmp=%%emailname_%%"
+                        width="1" height="1" /></td>
+            </tr>
+        </table>
+</body>
+
+</html>
